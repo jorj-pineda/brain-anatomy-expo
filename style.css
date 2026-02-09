@@ -1,0 +1,12 @@
+body { margin: 0; background-color: #050505; color: white; font-family: sans-serif; overflow: hidden; }
+#ui-container { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
+#info-panel { 
+    background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(10px); 
+    padding: 20px; 
+    border-radius: 8px; 
+    width: 300px; 
+    pointer-events: auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+h1 { margin: 0 0 10px 0; font-size: 1.5rem; }
