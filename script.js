@@ -16,11 +16,29 @@ topLight.position.set(5, 10, 5);
 scene.add(topLight);
 
 // --- DATA FOR THE BRAIN ---
-// Match these keys to the "child.name" of your 3D parts!
+// Replace these IDs with the exact "Found ID" names from your console
 const brainData = {
-    "Cerebrum": "The largest part of the brain, responsible for higher functions like interpreting touch, vision, and hearing, as well as speech, reasoning, and emotions.",
-    "Cerebellum": "Located under the cerebrum. Its function is to coordinate muscle movements, maintain posture, and balance.",
-    "Brainstem": "Acts as a relay center connecting the cerebrum and cerebellum to the spinal cord. It performs many automatic functions such as breathing and heart rate.",
+    "Brain_Part_02_Colour_Brain_Texture": {
+        title: "Frontal Lobe",
+        description: "Controls cognitive skills like emotional expression, problem solving, memory, and language."
+    },
+    "Brain_Part_04_Colour_Brain_Texture": {
+        title: "Parietal Lobe",
+        description: "Processes sensory information regarding the location of parts of the body as well as interpreting visual information."
+    },
+    "Brain_Part_05_Colour_Brain_Texture": {
+        title: "Occipital Lobe",
+        description: "The visual processing center of the mammalian brain containing most of the anatomical region of the visual cortex."
+    },
+    "Brain_Part_06_Colour_Brain_Texture": {
+        title: "Temporal Lobe",
+        description: "Involved in primary auditory perception, such as hearing, and holds the primary auditory cortex."
+    },
+    // Add your 5th part here once you find the ID in the console!
+    "Brain_Part_01_Colour_Brain_Texture": {
+        title: "Cerebellum",
+        description: "Coordinates voluntary movements such as posture, balance, coordination, and speech."
+    }
 };
 
 // --- LOAD MODEL ---
@@ -32,32 +50,54 @@ const loader = new GLTFLoader();
 loader.load('brain_project.glb', (gltf) => {
     brainModel = gltf.scene;
     scene.add(brainModel);
-    console.log("Model Loaded. Ready to click.");
+    
+    console.log("--- START OF BRAIN PART LIST ---");
+    brainModel.traverse((child) => {
+        if (child.isMesh) {
+            console.log("Found ID:", child.name);
+        }
+    });
+    console.log("--- END OF BRAIN PART LIST ---");
+    
+}, undefined, (error) => {
+    console.error("Error loading model:", error);
 });
 
 camera.position.z = 3;
 const controls = new OrbitControls(camera, renderer.domElement);
 
-// --- CLICK DETECTION ---
+// --- SINGLE CLICK DETECTION ---
 window.addEventListener('click', (event) => {
-    // Calculate mouse position in normalized device coordinates (-1 to +1)
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children, true);
+    
+    // Always check against brainModel with 'true' for accuracy
+    if (brainModel) {
+        const intersects = raycaster.intersectObject(brainModel, true);
 
-    if (intersects.length > 0) {
-        const clickedPart = intersects[0].object;
-        const partName = clickedPart.name;
-        
-        // Update the UI
-        document.getElementById('part-name').innerText = partName;
-        document.getElementById('part-description').innerText = brainData[partName] || "No data available for this section.";
-        
-        // Visual Feedback: Highlight the part
-        clickedPart.material.emissive.setHex(0x333333); 
-        setTimeout(() => clickedPart.material.emissive.setHex(0x000000), 500);
+        if (intersects.length > 0) {
+            const clickedPart = intersects[0].object;
+            const partName = clickedPart.name;
+            console.log("You clicked:", partName);
+            
+            const data = brainData[partName];
+
+            if (data) {
+                document.getElementById('part-name').innerText = data.title;
+                document.getElementById('part-description').innerText = data.description;
+            } else {
+                document.getElementById('part-name').innerText = "Region Selected";
+                document.getElementById('part-description').innerText = "ID: " + partName + ". (Map this in brainData!)";
+            }
+            
+            // Visual Feedback: Flash the part
+            if (clickedPart.material.emissive) {
+                clickedPart.material.emissive.setHex(0x444444); 
+                setTimeout(() => clickedPart.material.emissive.setHex(0x000000), 300);
+            }
+        }
     }
 });
 
