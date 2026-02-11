@@ -21,6 +21,17 @@ const fillLight = new THREE.DirectionalLight(0x99bbff, 0.5);
 fillLight.position.set(-6, 2, -2);
 scene.add(fillLight);
 
+// --- HIGHLIGHTER ORB ---
+// An invisible sphere that jumps to the click location and glows
+const highlightGeometry = new THREE.SphereGeometry(0.25, 32, 32); 
+const highlightMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0xffff00, // Yellow glow
+    transparent: true, 
+    opacity: 0.0 
+});
+const highlightOrb = new THREE.Mesh(highlightGeometry, highlightMaterial);
+scene.add(highlightOrb);
+
 // --- BRAIN DATA ---
 const regionData = {
     "Frontal Lobe": {
@@ -57,64 +68,86 @@ let brainBox = new THREE.Box3();
 let brainCenter = new THREE.Vector3();
 let brainSize = new THREE.Vector3();
 
-// --- LOGIC: GUESS PART BASED ON POSITION ---
+// --- LOGIC: MAP COORDINATES TO REGIONS ---
 function getRegionFromPosition(point) {
     // Calculate relative position (-1 to +1) from the center
+    // Note: Z is Front(+)/Back(-), Y is Top(+)/Bottom(-)
     const localZ = (point.z - brainCenter.z) / (brainSize.z / 2);
     const localY = (point.y - brainCenter.y) / (brainSize.y / 2);
 
     console.log(`Debug Click -> Z: ${localZ.toFixed(2)}, Y: ${localY.toFixed(2)}`);
 
-    // --- TUNED VALUES BASED ON YOUR DATA ---
-    
-    // 1. Frontal Lobe (Your data showed lowest Z was 0.22)
-    if (localZ > 0.20) {
-        return "Frontal Lobe";
-    } 
-    
-    // 2. Occipital Lobe (The exact opposite of Frontal)
-    else if (localZ < -0.4) {
-        return "Occipital Lobe";
-    } 
-    
-    // 3. Parietal vs Temporal (Split by height)
-    // If it's NOT Front and NOT Back, check Height (Y)
-    else {
-        if (localY > 0.1) {
-            return "Parietal Lobe"; // Top Middle
-        } else {
-            return "Temporal Lobe"; // Bottom Middle
-        }
+    // 1. BRAIN STEM (Deep Low, Central Z)
+    if (localY < -0.45 && localZ > -0.4 && localZ < 0.15) {
+        return "Brain Stem";
     }
+
+    // 2. CEREBELLUM (Low Y, Back Z)
+    // Your data: Y < -0.38, Z < -0.1
+    if (localY < -0.38 && localZ < -0.1) {
+        return "Cerebellum";
+    }
+
+    // 3. PITUITARY GLAND (Specific small box)
+    // Your data: Z 0.08 to 0.28, Y -0.30 to -0.42
+    if (localY < -0.25 && localY > -0.5 && localZ > 0.0 && localZ < 0.30) {
+        return "Pituitary Gland";
+    }
+
+    // 4. OCCIPITAL LOBE (Back)
+    // Your data: Z < -0.4, Y < 0.28 (Upper limit separates from Parietal)
+    if (localZ < -0.4 && localY < 0.28) {
+        return "Occipital Lobe";
+    }
+
+    // 5. PARIETAL LOBE (Top Middle/Back)
+    // Your data: Y > 0.15, Z can go back to -0.9 (if high) or forward to 0.32
+    if (localY > 0.15 && localZ < 0.35) {
+        return "Parietal Lobe";
+    }
+
+    // 6. TEMPORAL LOBE (Bottom/Side Middle)
+    // Your data: Y < 0.15, Z < 0.6
+    if (localY < 0.15 && localZ < 0.6) {
+        return "Temporal Lobe";
+    }
+
+    // 7. FRONTAL LOBE (The Rest - Front)
+    return "Frontal Lobe";
 }
 
 function handleClick(mesh, point) {
     let regionKey = null;
-    const meshName = mesh.name.toLowerCase();
-
-    // Case A: Specific Organs
-    if (meshName.includes('cerebellum')) regionKey = "Cerebellum";
-    else if (meshName.includes('stem')) regionKey = "Brain Stem";
-    else if (meshName.includes('pituitary')) regionKey = "Pituitary Gland";
     
-    // Case B: Fused Hemispheres (Use the Math!)
-    else {
-        regionKey = getRegionFromPosition(point);
-    }
+    // Always use the math logic now, as it's more accurate than the mesh names
+    regionKey = getRegionFromPosition(point);
 
-    console.log("Region Detected:", regionKey); // Check console if UI fails
+    console.log("Region Detected:", regionKey); 
 
     // Update UI
     if (regionKey && regionData[regionKey]) {
         infoName.innerText = regionKey;
         infoDescription.innerText = regionData[regionKey].description;
         
-        // Highlight logic
-        const originalEmissive = mesh.material.emissive.getHex();
-        mesh.material.emissive.setHex(0x333333);
-        setTimeout(() => {
-            mesh.material.emissive.setHex(originalEmissive);
-        }, 300);
+        // --- HIGHLIGHT ORB LOGIC ---
+        // 1. Move orb to click position
+        highlightOrb.position.copy(point);
+        highlightOrb.visible = true;
+        
+        // 2. Pulse Animation
+        let opacity = 0.8;
+        highlightOrb.material.opacity = opacity;
+        
+        function fade() {
+            opacity -= 0.04; // Fade speed
+            highlightOrb.material.opacity = opacity;
+            if (opacity > 0) {
+                requestAnimationFrame(fade);
+            } else {
+                highlightOrb.visible = false;
+            }
+        }
+        fade();
     }
 }
 
@@ -124,7 +157,7 @@ loader.load('brain_project.glb', (gltf) => {
     brainModel = gltf.scene;
     scene.add(brainModel);
 
-    // Calculate dimensions for the math logic
+    // Calculate dimensions
     brainBox.setFromObject(brainModel);
     brainBox.getCenter(brainCenter);
     brainBox.getSize(brainSize);
@@ -132,7 +165,7 @@ loader.load('brain_project.glb', (gltf) => {
     // Center the model
     brainModel.position.sub(brainCenter);
     
-    // Update our math references since we moved the model
+    // Update references
     brainBox.setFromObject(brainModel);
     brainBox.getCenter(brainCenter);
     brainBox.getSize(brainSize);
@@ -144,6 +177,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 0, 4);
 
 window.addEventListener('click', (event) => {
+    // Standardize mouse coordinates
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
