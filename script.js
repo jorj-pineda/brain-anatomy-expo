@@ -21,28 +21,28 @@ const fillLight = new THREE.DirectionalLight(0x99bbff, 0.5);
 fillLight.position.set(-6, 2, -2);
 scene.add(fillLight);
 
-// --- BRAIN DATA ---
+// --- BRAIN DATA (Expanded) ---
 const regionData = {
     "Frontal Lobe": {
-        description: "Controls planning, decision-making, speech, and voluntary movement."
+        description: "The 'Control Panel' of our personality and ability to communicate. \n\nFunctions:\n• Cognitive skills (planning, problem-solving)\n• Emotional expression and personality\n• Voluntary movement (Motor Cortex)\n• Language production (Broca's Area)\n\nDid you know? This is the last part of the brain to fully mature, often not until your mid-20s!"
     },
     "Parietal Lobe": {
-        description: "Processes touch, pressure, temperature, pain, and spatial awareness."
+        description: "The 'Sensory Manager' that processes information about the world around us. \n\nFunctions:\n• Sensation (touch, temperature, pain)\n• Spatial awareness and navigation\n• Reading and arithmetic\n• Hand-eye coordination\n\nDid you know? Damage to this area can lead to 'Hemispatial Neglect,' where a person simply ignores one half of their visual field."
     },
     "Occipital Lobe": {
-        description: "The visual processing center. Interprets shape, color, and depth."
+        description: "The 'Visual Processing Center' located at the very back of the brain. \n\nFunctions:\n• Visual perception\n• Color recognition\n• Depth perception\n• Motion detection\n\nDid you know? Even if your eyes are perfectly healthy, damage here can cause 'Cortical Blindness' because the brain can't process what it sees."
     },
     "Temporal Lobe": {
-        description: "Vital for long-term memory, hearing, and language comprehension."
+        description: "The 'Data Center' for sound and memory. \n\nFunctions:\n• Processing auditory information (hearing)\n• Encoding memory (Hippocampus)\n• Language comprehension (Wernicke's Area)\n• Emotion regulation\n\nDid you know? This region houses the Hippocampus, which acts as the 'Save Button' for new memories."
     },
     "Cerebellum": {
-        description: "Coordinates voluntary movements such as posture, balance, and coordination."
+        description: "Latin for 'Little Brain.' It contains more neurons than the rest of the brain combined! \n\nFunctions:\n• Coordination and balance\n• Fine motor control\n• Muscle memory (like riding a bike)\n• Posture maintenance\n\nDid you know? While it only takes up 10% of brain volume, it holds over 50% of the brain's total neurons."
     },
     "Brain Stem": {
-        description: "Controls automatic functions like breathing, heart rate, and sleep cycles."
+        description: "The 'Life Support' system connecting the brain to the spinal cord. \n\nFunctions:\n• Breathing and heart rate\n• Blood pressure regulation\n• Sleep cycles (consciousness)\n• Swallowing and digestion\n\nDid you know? Because it controls vital functions, injuries here are often the most life-threatening."
     },
     "Pituitary Gland": {
-        description: "The master gland regulating growth and metabolism."
+        description: "The 'Master Gland' regarding hormone regulation. \n\nFunctions:\n• Growth hormones\n• Metabolism regulation\n• Stress response (Cortisol)\n• Reproduction hormones\n\nDid you know? It is only the size of a pea but controls almost every other hormone-secreting gland in the body."
     }
 };
 
@@ -85,7 +85,7 @@ function getRegionFromPosition(point) {
     return "Frontal Lobe";
 }
 
-// --- NEW: PAINTING LOGIC (Fixed for Multiple Meshes + Subtle Highlight) ---
+// --- VERTEX PAINTING LOGIC (The Glow Effect) ---
 function highlightRegion(targetRegion) {
     // Loop through ALL meshes (Cerebellum, Stem, Hemispheres)
     brainMeshes.forEach(mesh => {
